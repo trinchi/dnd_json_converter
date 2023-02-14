@@ -123,6 +123,7 @@ def transform_armor(armor, amount: int = 1) -> RpgCard:
 def transform_weapon(weapon, amount: int = 1) -> RpgCard:
     out = RpgCard()
     out.count = amount
+    out.color = 'FireBrick'
     out.title = weapon['name']
     out.icon = determine_weapon_icon(weapon)
     out.icon_back = determine_weapon_icon(weapon)
