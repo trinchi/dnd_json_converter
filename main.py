@@ -1,8 +1,9 @@
 import json
-import re
+import yaml
 
 import requests
 
+from EquipmentInput import EquipmentInput
 import transformer
 from RpgCard import RpgCard
 
@@ -16,36 +17,6 @@ EQUIPMENT_CATEGORIES = {
     'weapon': transformer.transform_weapon,
     'adventuring-gear': transformer.transform_gear,
     'tools': transformer.transform_tool,
-}
-
-EQUIPMENT_TO_OUTPUT = {
-    'Quarterstaff': 1,
-    'Clothes, Common': 1,
-    'Ink': 1,
-    'Backpack': 2,
-    'Bedroll': 2,
-    'Mess Kit': 2,
-    'Tinderbox': 2,
-    'Torch': 2,
-    'Rations (1 day)': 2,
-    'Waterskin': 2,
-    'Rope, hempen (50 feet)': 2,
-    "Healer's Kit": 2,
-    'Component Pouch': 1,
-    'Wand': 1,
-    'Chain Mail': 1,
-    'Greataxe': 1,
-    'Handaxe': 1,
-    'Shield': 1,
-    'Crowbar': 1,
-    'Hammer': 1,
-    'Piton': 1,
-    'Holy Symbol': 1,
-    'Holy water (flask)': 1,
-    'Menacles': 1,
-    'Mirror, steel': 1,
-    'Oil (flask)': 1,
-    'Warhammer': 1,
 }
 
 
@@ -63,21 +34,6 @@ def rpgcard_list_to_dict_list(cards: list[RpgCard]) -> list[dict]:
     return out
 
 
-def filter_by_equipment_to_output(element: RpgCard):
-    if element.title.lower() in (item.lower() for item in EQUIPMENT_TO_OUTPUT):
-        return True
-    return False
-
-
-def modify_equipment_count(equipment_arr: list[RpgCard]):
-    out = []
-    for equipment in equipment_arr:
-        if equipment.title in EQUIPMENT_TO_OUTPUT.keys():
-            equipment.count = EQUIPMENT_TO_OUTPUT[equipment.title]
-        out.append(equipment)
-    return out
-
-
 # https://rpg-cards.vercel.app/
 # Settings:
 # - A4
@@ -86,19 +42,22 @@ def modify_equipment_count(equipment_arr: list[RpgCard]):
 # - Default Font Size -> 9px
 if __name__ == '__main__':
     output = []
+    with open("input.yaml", "r") as stream:
+        equipment_list_to_output = EquipmentInput.from_input_list(yaml.safe_load(stream)['equipment'])
 
-    for equipment_category in EQUIPMENT_CATEGORIES:
-        equipment_cat_res = requests.get(BASE_URL + '/api/equipment-categories/' + equipment_category)
-        for equipment_info_res in equipment_cat_res.json()['equipment']:
+    for equipment_to_output in equipment_list_to_output:
+        if equipment_to_output.index:
+            equipment = requests.get(BASE_URL + '/api/equipment/' + equipment_to_output.index).json()
+        elif equipment_to_output.name:
+            # search equipment via query parameters
+            search_result = requests.get(BASE_URL + '/api/equipment/', params={'name': equipment_to_output.name}).json()
+            equipment = requests.get(BASE_URL + search_result['results'][0]['url']).json()
+        else:
+            continue
 
-            # Exclude all Magic Items
-            if re.match('^\/api\/magic\-items\/.+', equipment_info_res['url']) is None:
-                # only include specified equipment
-                if equipment_info_res['name'].lower() in (item.lower() for item in EQUIPMENT_TO_OUTPUT):
-                    equipment = requests.get(BASE_URL + equipment_info_res['url']).json()
-                    output.append(EQUIPMENT_CATEGORIES[equipment_category](equipment))
+        equipment_category = equipment['equipment_category']['index']
+        output.append(EQUIPMENT_CATEGORIES[equipment_category](equipment, equipment_to_output.amount))
 
-    output = modify_equipment_count(output)
     output_json = json.dumps(rpgcard_list_to_dict_list(output), indent=4, ensure_ascii=False)
     with open("out.json", "w") as outfile:
         outfile.write(output_json)

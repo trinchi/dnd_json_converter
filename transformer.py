@@ -74,8 +74,9 @@ def make_dmg_bold(text):
     return re.sub('([1-9]+d[0-9]+|[0-9]+) [a-zA-Z]+ damage', '<b>\g<0></b>', text)
 
 
-def transform_armor(armor) -> RpgCard:
+def transform_armor(armor, amount: int = 1) -> RpgCard:
     out = RpgCard()
+    out.count = amount
     out.title = armor['name']
     out.icon = determine_armor_icon(armor)
     out.icon_back = determine_armor_icon(armor)
@@ -119,8 +120,9 @@ def transform_armor(armor) -> RpgCard:
     return out
 
 
-def transform_weapon(weapon) -> RpgCard:
+def transform_weapon(weapon, amount: int = 1) -> RpgCard:
     out = RpgCard()
+    out.count = amount
     out.title = weapon['name']
     out.icon = determine_weapon_icon(weapon)
     out.icon_back = determine_weapon_icon(weapon)
@@ -158,8 +160,9 @@ def transform_weapon(weapon) -> RpgCard:
     return out
 
 
-def transform_gear(gear) -> RpgCard:
+def transform_gear(gear, amount: int = 1) -> RpgCard:
     out = RpgCard()
+    out.count = amount
     out.title = gear['name']
     out.icon = 'swap-bag'
     out.icon_back = 'swap-bag'
@@ -187,8 +190,9 @@ def transform_gear(gear) -> RpgCard:
     return out
 
 
-def transform_tool(tool) -> RpgCard:
+def transform_tool(tool, amount: int = 1) -> RpgCard:
     out = RpgCard()
+    out.count = amount
     out.title = tool['name']
     out.icon = 'dig-dug'
     out.icon_back = 'dig-dug'

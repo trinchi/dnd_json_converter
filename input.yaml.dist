@@ -1,0 +1,5 @@
+equipment:
+  - name: Quarterstaff
+    amount: 1
+  - index: chain-mail
+    amount: 1
